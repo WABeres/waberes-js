@@ -1,0 +1,2 @@
+import { BaseResource } from "./base";
+
