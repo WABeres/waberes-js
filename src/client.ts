@@ -92,11 +92,11 @@ export class WABeresClient {
                 method,
                 signal: controller.signal,
                 headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key':    this.apiKey,
-                'X-Signature':  signature,
-                'X-Timestamp':  timestamp,
-                ...options.headers,
+                    'Content-Type': 'application/json',
+                    'X-API-Key':    this.apiKey,
+                    'X-Signature':  signature,
+                    'X-Timestamp':  timestamp,
+                    ...options.headers,
                 },
                 body: bodyStr || undefined,
             });
@@ -121,16 +121,16 @@ export class WABeresClient {
         const err = await res.json().catch(() => ({})) as Record<string, string>;
 
         switch (res.status) {
-            case 400: throw new BadRequestError(err.message);
-            case 401: throw new AuthError(err.message);
-            case 403: throw new ForbiddenError(err.message);
-            case 404: throw new NotFoundError(err.message);
-            case 406: throw new UnacceptableError(err.message);
-            case 409: throw new ConflictError(err.message);
+            case 400: throw new BadRequestError(err.error);
+            case 401: throw new AuthError(err.error);
+            case 403: throw new ForbiddenError(err.error);
+            case 404: throw new NotFoundError(err.error);
+            case 406: throw new UnacceptableError(err.error);
+            case 409: throw new ConflictError(err.error);
             case 429: throw new RateLimitError(Number(res.headers.get('Retry-After')) || undefined);
-            case 500: throw new InternalServerError(err.message);
-            case 501: throw new NotImplementedError(err.message);
-            default:  throw new APIError(res.status, err.code ?? 'API_ERROR', err.message ?? 'Unknown error');
+            case 500: throw new InternalServerError(err.error);
+            case 501: throw new NotImplementedError(err.error);
+            default:  throw new APIError(res.status, err.code ?? 'API_ERROR', err.error ?? 'Unknown error');
         }
     }
 

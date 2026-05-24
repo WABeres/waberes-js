@@ -21,8 +21,21 @@ That command will run `npm install`, `npm run build` and `npm link` under the ho
 ```bash
 npm link waberes-js
 ```
+_Always remember to run `npm link waberes-js` at the end of every npm install command, otherwise it will disappear from `node_modules`_
 
-And that's it...<br>
+### Use it on your project
+
+```javascript
+import { createWABeresClient } from "waberes-js";
+
+const client = createWABeresClient({
+    apiKey: "your_api_key",
+    secretKey: "your_api_key"
+});
+```
+
+
+And that's it...you can explore the methods available<br>
 
 ### On every SDK update, run this command on the SDK directory
 ```bash

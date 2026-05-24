@@ -5,6 +5,6 @@ export { WABeresClient } from './client';
 export * from './types';
 export * from './errors';
 
-export function createClient(config: SDKConfig) {
+export function createWABeresClient(config: SDKConfig) {
   return new WABeresClient(config);
 }

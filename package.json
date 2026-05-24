@@ -3,19 +3,21 @@
   "version": "0.1.0",
   "type": "module",
   "description": "SDK for interacting with WABeres API for convenience",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --format esm,cjs --dts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -36,7 +38,8 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.7",
     "msw": "^2.14.6",
-    "typescript": "^6.0.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
     "vitest": "^4.1.7",
     "zod": "^4.4.3"
   }
