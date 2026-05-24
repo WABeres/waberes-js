@@ -1,13 +1,26 @@
 {
   "name": "waberes-js",
-  "version": "1.0.0",
+  "version": "0.1.0",
+  "type": "module",
   "description": "SDK for interacting with WABeres API for convenience",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm test && npm run build",
+    "setup": "npm install && npm run build && npm link"
   },
   "repository": {
     "type": "git",
@@ -16,7 +29,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/WABeres/waberes-js/issues"
   },
@@ -25,6 +37,7 @@
     "@vitest/coverage-v8": "^4.1.7",
     "msw": "^2.14.6",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.7",
+    "zod": "^4.4.3"
   }
 }

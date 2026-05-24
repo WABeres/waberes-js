@@ -1,6 +1,9 @@
 import { SDKConfig, RequestOptions } from "./types";
 import { signRequest } from "./auth";
-import { APIError, AuthError, RateLimitError } from "./errors";
+import { APIError, AuthError, BadRequestError, ConflictError, ForbiddenError, InternalServerError, NotFoundError, NotImplementedError, RateLimitError, UnacceptableError } from "./errors";
+import { AccountResource } from "./resources/account";
+import { DevicesResource } from "./resources/devices";
+import { MessageResource } from "./resources/messages";
 
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504])
 
@@ -22,6 +25,9 @@ export class WABeresClient {
     private readonly maxAttempts: number;
     private readonly baseDelay: number;
     private readonly maxDelay: number;
+    readonly account: AccountResource;
+    readonly devices: DevicesResource;
+    readonly messages: MessageResource;
 
     constructor(config: SDKConfig) {
         if(!config.apiKey || !config.secretKey) {
@@ -35,6 +41,10 @@ export class WABeresClient {
         this.maxAttempts = config.retry?.maxAttempts ?? 3;
         this.baseDelay   = config.retry?.baseDelay   ?? 1_000;
         this.maxDelay    = config.retry?.maxDelay    ?? 30_000;
+
+        this.account = new AccountResource(this);
+        this.devices = new DevicesResource(this);
+        this.messages = new MessageResource(this);
     }
 
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -44,23 +54,23 @@ export class WABeresClient {
         let lastError: unknown;
 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-            return await this.doRequest<T>(path, options);
-        } catch (err) {
-            lastError = err;
+            try {
+                return await this.doRequest<T>(path, options);
+            } catch (err) {
+                lastError = err;
 
-            const isRetryable = this.isRetryableError(err);
-            const isLastAttempt = attempt === maxAttempts - 1;
+                const isRetryable = this.isRetryableError(err);
+                const isLastAttempt = attempt === maxAttempts - 1;
 
-            if (!isRetryable || isLastAttempt) throw err;
+                if (!isRetryable || isLastAttempt) throw err;
 
-            // Kalau RateLimitError, hormati Retry-After dari server
-            const delay = err instanceof RateLimitError && err.retryAfter
-            ? err.retryAfter * 1000
-            : calcDelay(attempt, this.baseDelay, this.maxDelay);
+                // Kalau RateLimitError, hormati Retry-After dari server
+                const delay = err instanceof RateLimitError && err.retryAfter
+                    ? err.retryAfter * 1000
+                    : calcDelay(attempt, this.baseDelay, this.maxDelay);
 
-            await sleep(delay);
-        }
+                await sleep(delay);
+            }
         }
 
         throw lastError;
@@ -71,29 +81,29 @@ export class WABeresClient {
         const bodyStr = options.body ? JSON.stringify(options.body) : '';
 
         const { signature, timestamp } = await signRequest(
-        method, path, bodyStr, this.secretKey
+            method, path, bodyStr, this.secretKey
         );
 
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), this.timeout);
 
         try {
-        const res = await fetch(`${this.baseUrl}${path}`, {
-            method,
-            signal: controller.signal,
-            headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key':    this.apiKey,
-            'X-Signature':  signature,
-            'X-Timestamp':  timestamp,
-            ...options.headers,
-            },
-            body: bodyStr || undefined,
-        });
+            const res = await fetch(`${this.baseUrl}${path}`, {
+                method,
+                signal: controller.signal,
+                headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key':    this.apiKey,
+                'X-Signature':  signature,
+                'X-Timestamp':  timestamp,
+                ...options.headers,
+                },
+                body: bodyStr || undefined,
+            });
 
-        return await this.handleResponse<T>(res);
+            return await this.handleResponse<T>(res);
         } finally {
-        clearTimeout(timer);
+            clearTimeout(timer);
         }
     }
 
@@ -107,19 +117,26 @@ export class WABeresClient {
 
     private async handleResponse<T>(res: Response): Promise<T> {
         if (res.ok) return res.json() as Promise<T>;
-
+        
         const err = await res.json().catch(() => ({})) as Record<string, string>;
 
         switch (res.status) {
-        case 401: throw new AuthError(err.message);
-        case 429: throw new RateLimitError(Number(res.headers.get('Retry-After')) || undefined);
-        default:  throw new APIError(res.status, err.code ?? 'API_ERROR', err.message ?? 'Unknown error');
+            case 400: throw new BadRequestError(err.message);
+            case 401: throw new AuthError(err.message);
+            case 403: throw new ForbiddenError(err.message);
+            case 404: throw new NotFoundError(err.message);
+            case 406: throw new UnacceptableError(err.message);
+            case 409: throw new ConflictError(err.message);
+            case 429: throw new RateLimitError(Number(res.headers.get('Retry-After')) || undefined);
+            case 500: throw new InternalServerError(err.message);
+            case 501: throw new NotImplementedError(err.message);
+            default:  throw new APIError(res.status, err.code ?? 'API_ERROR', err.message ?? 'Unknown error');
         }
     }
 
 
-    get<T>(path: string) { return this.request<T>(path, { method: 'GET' }); }
-    post<T>(path: string, body: unknown) { return this.request<T>(path, { method: 'POST' }); } 
-    put<T>(path: string, body: unknown) { return this.request<T>(path, { method: 'PUT' }); }
-    delete<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }); }
+    get<T>(path: string, headers = {}) { return this.request<T>(path, { method: 'GET', headers: {...headers} }); }
+    post<T>(path: string, body: unknown, headers = {}) { return this.request<T>(path, { method: 'POST', headers: {...headers}, body: body }); } 
+    put<T>(path: string, body: unknown, headers = {}) { return this.request<T>(path, { method: 'PUT', headers: {...headers}, body: body }); }
+    delete<T>(path: string, headers = {}) { return this.request<T>(path, { method: 'DELETE', headers: {...headers} }); }
 }
