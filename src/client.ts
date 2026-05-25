@@ -116,7 +116,10 @@ export class WABeresClient {
     }
 
     private async handleResponse<T>(res: Response): Promise<T> {
-        if (res.ok) return res.json() as Promise<T>;
+        if (res.ok) {
+            const result = await res.json();
+            return result.data as Promise<T>;
+        };
         
         const err = await res.json().catch(() => ({})) as Record<string, string>;
 
