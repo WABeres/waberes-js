@@ -1,6 +1,6 @@
 {
-  "name": "waberes-js",
-  "version": "0.1.0",
+  "name": "@waberes/waberes-js",
+  "version": "0.0.1",
   "type": "module",
   "description": "SDK for interacting with WABeres API for convenience",
   "main": "./dist/index.cjs",
@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/WABeres/waberes-js#readme",
   "devDependencies": {
+    "@types/node": "^25.9.2",
     "@vitest/coverage-v8": "^4.1.7",
     "msw": "^2.14.6",
     "tsup": "^8.5.1",

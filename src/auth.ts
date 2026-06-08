@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from 'crypto';
+
 export async function signRequest(
     method: string,
     path: string,
@@ -28,4 +30,26 @@ export async function signRequest(
         .join('');
 
     return { signature, timestamp };
+}
+
+export function verifyWebhookSignature(
+  payload: string,
+  signature: string | undefined | null,
+  webhookId: string | undefined | null,
+  timestamp: string | undefined | null,
+  secret: string,
+): boolean {
+  if (!signature || !webhookId || !timestamp) return false;
+
+  const expectedSignature = createHmac('sha256', secret)
+    .update(webhookId + timestamp)
+    .update(payload, 'utf8')
+    .digest('hex');
+
+  const sigBuffer = Buffer.from(signature, 'hex');
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+  if (sigBuffer.length !== expectedBuffer.length) return false;
+
+  return timingSafeEqual(expectedBuffer, sigBuffer);
 }

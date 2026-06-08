@@ -4,6 +4,7 @@ import type { SDKConfig } from './types';
 export { WABeresClient } from './client';
 export * from './types';
 export * from './errors';
+export { verifyWebhookSignature } from './auth';
 
 export function createWABeresClient(config: SDKConfig) {
   return new WABeresClient(config);

@@ -6,7 +6,7 @@ import { WABeresClient } from "../src/client";
 import { http, HttpResponse } from "msw";
 import { APIError, AuthError, BadRequestError, ConflictError, ForbiddenError, InternalServerError, NotFoundError, NotImplementedError, RateLimitError, UnacceptableError } from "../src/errors";
 import { AccountPlanChoicesSchema, AccountRenewSchema, AccountSchema } from "../src/resources/account";
-import { SendMessagePayload, SendMessageResponseSchema } from "../src/resources/messages";
+import { SendChatPresenceRequest, SendChatPresenceResponseSchema, SendMessagePayload, SendMessageResponseSchema } from "../src/resources/messages";
 import { DeviceConnectQRSchema, DeviceDisconnectSchema, DeviceSchema } from "../src/resources/devices";
 
 
@@ -263,5 +263,21 @@ describe('message resource integration test', () => {
         const client = new WABeresClient(config);
         
         await expect(client.messages.send({} as SendMessagePayload, "")).rejects.toThrow(RateLimitError);
+    })
+
+    it('should return object typeof SendChatPresenceResponse', async () => {
+        const client = new WABeresClient(config);
+
+        const payload: SendChatPresenceRequest = {
+            phone_destination: "6281234567890",
+            action: "start"
+        };
+
+        const deviceId = 'deviceId';
+
+        const result = await client.messages.sendChatPresence(payload, deviceId);
+        const parsed = SendChatPresenceResponseSchema.safeParse(result);
+
+        expect(parsed.success).toBe(true);
     })
 })

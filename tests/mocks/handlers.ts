@@ -24,15 +24,17 @@ export const handlers = [
         }
 
         return HttpResponse.json({
-            "days_left": 30,
-            "expiry_date": "",
-            "initial_quota": "1",
-            "plan": "<string>",
-            "plan_type": "TIME_BASED",
-            "remaining_quota": "1",
-            "session_id": "<random_uuid>",
-            "start_date": "",
-            "user_id": "user_jkjfuiwpoiuroiqt61276"
+            data: {
+                "days_left": 30,
+                "expiry_date": "",
+                "initial_quota": "1",
+                "plan": "<string>",
+                "plan_type": "TIME_BASED",
+                "remaining_quota": "1",
+                "session_id": "<random_uuid>",
+                "start_date": "",
+                "user_id": "user_jkjfuiwpoiuroiqt61276"
+            }
         }, { status: 200 });
     }),
 
@@ -43,15 +45,17 @@ export const handlers = [
             return middlewareResult;
         }
 
-        return HttpResponse.json([
-            {
-                "duration": "7 hari",
-                "plan_name": "starter",
-                "plan_type": "TIME_BASED",
-                "price": 50000,
-                "quota": "Unlimited"
-            }
-        ], { status: 200 });
+        return HttpResponse.json({
+            data: [
+                {
+                    "duration": "7 hari",
+                    "plan_name": "starter",
+                    "plan_type": "TIME_BASED",
+                    "price": 50000,
+                    "quota": "Unlimited"
+                }
+            ]
+        }, { status: 200 });
     }),
 
     http.post(`${BASE_URL}/api/v1/account/renew`, ({ request }) => {
@@ -86,8 +90,10 @@ export const handlers = [
         }
 
         return HttpResponse.json({
-            "description": "Account renewal for Plan: <your_plan> | UserID=<your_user_id> is successfully created, waiting for payment...",
-            "payment_url": "https://paymentgateway.com/payment/ref=DGHFYUH8787967"
+            data: {
+                "description": "Account renewal for Plan: <your_plan> | UserID=<your_user_id> is successfully created, waiting for payment...",
+                "payment_url": "https://paymentgateway.com/payment/ref=DGHFYUH8787967"
+            }
         }, { status: 200 });
     }),
     
@@ -110,9 +116,11 @@ export const handlers = [
         }
 
         return HttpResponse.json({
-            "created_at": "<string>",
-            "device_id": "01GAHGDYTRIUGIDUYFI",
-            "state": "disconnected"
+            data: {
+                "created_at": "<string>",
+                "device_id": "01GAHGDYTRIUGIDUYFI",
+                "state": "disconnected"
+            }
         }, { status: 200 });
     }),
 
@@ -133,8 +141,10 @@ export const handlers = [
         }
 
         return HttpResponse.json({
-            "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...",
-            "qr_duration": 30
+            data: {
+                "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...",
+                "qr_duration": 30
+            }
         }, { status: 200 });
     }),
 
@@ -155,8 +165,10 @@ export const handlers = [
         }
 
         return HttpResponse.json({
-            "device_id": "01YAUTFIUYASDFIAUSY",
-            "msg": "device has successfully disconnected"
+            data: {
+                "device_id": "01YAUTFIUYASDFIAUSY",
+                "msg": "device has successfully disconnected"
+            }
         }, { status: 200 });
     }),
     
@@ -178,8 +190,33 @@ export const handlers = [
         }
 
         return HttpResponse.json({
-            "job_id": "adfs892536",
-            "msg": "send message request enqueued!"
+            data: {
+                "job_id": "adfs892536",
+                "msg": "send message request enqueued!"
+            }
         }, { status: 202 });
+    }),
+
+    http.post(`${BASE_URL}/api/v1/messages/send/chat-presence`, ({ request }) => {
+        const middlewareResult = mockMiddleware(request);
+
+        if(middlewareResult !== undefined) {
+            return middlewareResult;
+        }
+
+        const deviceId = request.headers.get("X-Device-ID")
+
+        if(!deviceId){
+            return HttpResponse.json({
+                "error": "Missing Device ID",
+                "code": "MISSING_DEVICE_ID_HEADER"
+            }, { status: 400 })
+        }
+
+        return HttpResponse.json({
+            data: {
+                "chat_presence_detail": `typing signal sent to ${request.body}`
+            }
+        }, { status: 200 })
     })
 ]
